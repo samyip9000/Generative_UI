@@ -6,7 +6,7 @@ app.use(express.json({ limit: "32kb" }));
 app.use(express.static("."));
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
-const DEFAULT_MODEL  = process.env.OPENROUTER_MODEL || "anthropic/claude-sonnet-4.5";
+const DEFAULT_MODEL  = process.env.OPENROUTER_MODEL || "meta-llama/llama-3.3-70b-instruct";
 const PORT           = process.env.PORT || 3000;
 
 const SYSTEM_PROMPT = `You are a creative front-end designer. You generate a SINGLE self-contained HTML document for a full-page weather-aware greeting card.
