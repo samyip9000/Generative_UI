@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body data-weather="loading">
+  <!-- Static themed scene: shown while AI loads, and as a fallback if AI fails. -->
   <div class="scene">
     <div class="sky"></div>
     <div class="sun"></div>
@@ -21,10 +22,10 @@
     <div class="stars"></div>
   </div>
 
-  <main class="card">
+  <main class="card" id="fallback-card">
     <p class="eyebrow" id="time-of-day">Hello</p>
     <h1 class="greeting" id="greeting">Loading your day…</h1>
-    <p class="subtitle" id="subtitle">Checking the sky above you.</p>
+    <p class="subtitle" id="subtitle">Asking the AI to design today's greeting.</p>
 
     <div class="weather" id="weather" hidden>
       <div class="weather-icon" id="weather-icon">·</div>
@@ -37,6 +38,12 @@
 
     <p class="error" id="error" hidden></p>
   </main>
+
+  <!-- AI-generated UI gets injected here. Sandboxed: no scripts, no top-nav. -->
+  <iframe id="ai-frame" sandbox="" hidden title="AI-generated weather greeting"></iframe>
+
+  <button id="regenerate" class="regen" hidden title="Generate a new design">↻ Regenerate</button>
+  <div id="model-badge" class="model-badge" hidden></div>
 
   <script src="app.js"></script>
 </body>

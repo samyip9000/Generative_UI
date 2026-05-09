@@ -1,5 +1,4 @@
-// Weather codes per Open-Meteo (WMO):
-// https://open-meteo.com/en/docs
+// WMO weather codes per Open-Meteo: https://open-meteo.com/en/docs
 const WEATHER_CODES = {
   0:  { theme: "sunny",  icon: "☀️", desc: "clear sky" },
   1:  { theme: "sunny",  icon: "🌤️", desc: "mainly clear" },
@@ -31,41 +30,26 @@ const WEATHER_CODES = {
   99: { theme: "stormy", icon: "⛈️", desc: "severe thunderstorm" },
 };
 
-const GREETINGS = {
-  sunny:  ["What a beautiful day!", "The sun is yours to enjoy.", "Sunshine looks good on you.", "A bright day calls for big plans."],
-  cloudy: ["A soft, quiet kind of day.", "Take it easy under those clouds.", "Mellow skies, mellow mood.", "Perfect weather for a long walk."],
-  rainy:  ["Stay cozy out there.", "Rain has its own kind of magic.", "A good day for tea and a book.", "Don't forget your umbrella."],
-  snowy:  ["A snowy hush over everything.", "Bundle up — the world is white today.", "Snow days are for slowing down.", "Watch the snow fall and breathe."],
-  stormy: ["Big sky energy today.", "Stay safe — the sky is loud.", "A dramatic day for indoor plans.", "Let the storm pass with a warm drink."],
-  foggy:  ["A mysterious morning awaits.", "The world looks softer through fog.", "Drive gently — the sky's a secret today.", "A dreamy, hushed kind of day."],
-  night:  ["The night is quiet and yours.", "Rest well under the stars.", "A calm night in the city.", "Let the day go — it's been enough."],
-};
-
 function timeOfDay(hour) {
-  if (hour < 5)  return { label: "Late night",  greet: "Good night" };
-  if (hour < 12) return { label: "Morning",     greet: "Good morning" };
-  if (hour < 17) return { label: "Afternoon",   greet: "Good afternoon" };
-  if (hour < 21) return { label: "Evening",     greet: "Good evening" };
-  return                { label: "Night",       greet: "Good night" };
+  if (hour < 5)  return { label: "Late night", greet: "Good night" };
+  if (hour < 12) return { label: "Morning",    greet: "Good morning" };
+  if (hour < 17) return { label: "Afternoon",  greet: "Good afternoon" };
+  if (hour < 21) return { label: "Evening",    greet: "Good evening" };
+  return                { label: "Night",      greet: "Good night" };
 }
 
-function pick(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
-
-function setError(msg) {
+function showError(msg) {
   const el = document.getElementById("error");
   el.textContent = msg;
   el.hidden = false;
 }
 
 async function getCoords() {
-  // Try browser geolocation first; fall back to IP-based lookup.
   return new Promise((resolve) => {
     if (!navigator.geolocation) return resolve(ipLookup());
     navigator.geolocation.getCurrentPosition(
       (pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude, source: "gps" }),
-      () => resolve(ipLookup()),
+      ()    => resolve(ipLookup()),
       { timeout: 5000 }
     );
   });
@@ -78,7 +62,6 @@ async function ipLookup() {
     const d = await res.json();
     return { lat: d.latitude, lon: d.longitude, city: d.city, region: d.region, source: "ip" };
   } catch {
-    // Final fallback: London.
     return { lat: 51.5074, lon: -0.1278, city: "London", region: "UK", source: "fallback" };
   }
 }
@@ -103,51 +86,111 @@ async function getWeather(lat, lon) {
   if (!res.ok) throw new Error("weather request failed");
   const d = await res.json();
   return {
-    temp:  Math.round(d.current.temperature_2m),
-    code:  d.current.weather_code,
-    isDay: d.current.is_day === 1,
+    temp:    Math.round(d.current.temperature_2m),
+    code:    d.current.weather_code,
+    isDay:   d.current.is_day === 1,
+    tzTime:  d.current.time,
   };
 }
 
-function render({ weather, locationLabel }) {
-  const tod = timeOfDay(new Date().getHours());
+function renderFallback({ weather, locationLabel }) {
+  const tod  = timeOfDay(new Date().getHours());
   const info = WEATHER_CODES[weather.code] || { theme: "cloudy", icon: "🌡️", desc: "weather unknown" };
-
-  // Night overrides clear/partly-clear themes only — keep storm/snow/rain themes during night for safety cues.
   const useNight = !weather.isDay && ["sunny", "cloudy", "foggy"].includes(info.theme);
   const theme = useNight ? "night" : info.theme;
 
   document.body.dataset.weather = theme;
   document.getElementById("time-of-day").textContent = tod.label;
-  document.getElementById("greeting").textContent = `${tod.greet}. ${pick(GREETINGS[theme])}`;
-  document.getElementById("subtitle").textContent =
-    `It's ${weather.temp}° and ${info.desc} where you are.`;
-
+  document.getElementById("greeting").textContent    = `${tod.greet}.`;
+  document.getElementById("subtitle").textContent    = `It's ${weather.temp}° and ${info.desc} where you are.`;
   document.getElementById("weather-icon").textContent = useNight ? "🌙" : info.icon;
-  document.getElementById("temp").textContent = `${weather.temp}°C`;
-  document.getElementById("desc").textContent = info.desc;
-  document.getElementById("location").textContent = locationLabel || "Your location";
-  document.getElementById("weather").hidden = false;
+  document.getElementById("temp").textContent        = `${weather.temp}°C`;
+  document.getElementById("desc").textContent        = info.desc;
+  document.getElementById("location").textContent    = locationLabel || "Your location";
+  document.getElementById("weather").hidden          = false;
 }
 
-async function main() {
-  try {
-    const coords = await getCoords();
-    const [weather, geoLabel] = await Promise.all([
-      getWeather(coords.lat, coords.lon),
-      coords.source === "gps" ? reverseGeocode(coords.lat, coords.lon) : Promise.resolve(null),
-    ]);
-    const locationLabel = geoLabel || [coords.city, coords.region].filter(Boolean).join(", ");
-    render({ weather, locationLabel });
-  } catch (err) {
-    console.error(err);
-    setError("Couldn't load today's weather. Showing a default greeting.");
-    const tod = timeOfDay(new Date().getHours());
-    document.body.dataset.weather = "cloudy";
-    document.getElementById("time-of-day").textContent = tod.label;
-    document.getElementById("greeting").textContent = `${tod.greet}.`;
-    document.getElementById("subtitle").textContent = "Hope you have a lovely day.";
+async function generateAIUI(ctx) {
+  const res = await fetch("/api/generate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(ctx),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || `generate failed: ${res.status}`);
+  }
+  return res.json(); // { html, model }
+}
+
+function showAIFrame(html, modelName) {
+  const frame    = document.getElementById("ai-frame");
+  const fallback = document.getElementById("fallback-card");
+  const scene    = document.querySelector(".scene");
+  const regen    = document.getElementById("regenerate");
+  const badge    = document.getElementById("model-badge");
+
+  frame.srcdoc = html;
+  frame.hidden = false;
+  fallback.style.display = "none";
+  scene.style.display    = "none";
+  regen.hidden = false;
+
+  if (modelName) {
+    badge.textContent = modelName;
+    badge.hidden = false;
   }
 }
 
-main();
+async function run() {
+  let coords, weather, locationLabel;
+  try {
+    coords = await getCoords();
+    [weather, locationLabel] = await Promise.all([
+      getWeather(coords.lat, coords.lon),
+      coords.source === "gps" ? reverseGeocode(coords.lat, coords.lon) : Promise.resolve(null),
+    ]);
+    locationLabel = locationLabel || [coords.city, coords.region].filter(Boolean).join(", ");
+  } catch (err) {
+    console.error("weather fetch failed:", err);
+    showError("Couldn't determine your weather. Showing a default greeting.");
+    document.body.dataset.weather = "cloudy";
+    return;
+  }
+
+  // Render the static fallback first so the user sees something immediately.
+  renderFallback({ weather, locationLabel });
+
+  // Then ask the AI to generate a bespoke UI for these conditions.
+  const tod  = timeOfDay(new Date().getHours());
+  const info = WEATHER_CODES[weather.code] || { desc: "weather unknown" };
+  const ctx  = {
+    tempC:       weather.temp,
+    description: info.desc,
+    weatherCode: weather.code,
+    isDay:       weather.isDay,
+    timeOfDay:   tod.label.toLowerCase(),
+    localTime:   weather.tzTime || new Date().toISOString(),
+    location:    locationLabel || "your location",
+  };
+
+  try {
+    const { html, model } = await generateAIUI(ctx);
+    showAIFrame(html, model);
+  } catch (err) {
+    console.error("AI generation failed:", err);
+    showError(`AI generation failed (${err.message}). Showing the static greeting.`);
+  }
+}
+
+document.getElementById("regenerate").addEventListener("click", () => {
+  const btn = document.getElementById("regenerate");
+  btn.disabled = true;
+  btn.textContent = "↻ Generating…";
+  run().finally(() => {
+    btn.disabled = false;
+    btn.textContent = "↻ Regenerate";
+  });
+});
+
+run();
