@@ -42,6 +42,23 @@
   <!-- AI-generated UI gets injected here. Sandboxed: no scripts, no top-nav. -->
   <iframe id="ai-frame" sandbox="" hidden title="AI-generated weather greeting"></iframe>
 
+  <select id="location-picker" class="picker" title="Show weather for…">
+    <option value="auto">📍 Auto — your location</option>
+    <option value="manual" data-lat="35.6762"  data-lon="139.6503"  data-label="Tokyo, Japan">🇯🇵 Tokyo, Japan</option>
+    <option value="manual" data-lat="64.1466"  data-lon="-21.9426"  data-label="Reykjavík, Iceland">🇮🇸 Reykjavík, Iceland</option>
+    <option value="manual" data-lat="-33.8688" data-lon="151.2093"  data-label="Sydney, Australia">🇦🇺 Sydney, Australia</option>
+    <option value="manual" data-lat="30.0444"  data-lon="31.2357"   data-label="Cairo, Egypt">🇪🇬 Cairo, Egypt</option>
+    <option value="manual" data-lat="19.0760"  data-lon="72.8777"   data-label="Mumbai, India">🇮🇳 Mumbai, India</option>
+    <option value="manual" data-lat="-22.9068" data-lon="-43.1729"  data-label="Rio de Janeiro, Brazil">🇧🇷 Rio de Janeiro, Brazil</option>
+    <option value="manual" data-lat="40.7128"  data-lon="-74.0060"  data-label="New York, USA">🇺🇸 New York, USA</option>
+    <option value="manual" data-lat="51.5074"  data-lon="-0.1278"   data-label="London, UK">🇬🇧 London, UK</option>
+    <option value="manual" data-lat="48.8566"  data-lon="2.3522"    data-label="Paris, France">🇫🇷 Paris, France</option>
+    <option value="manual" data-lat="-33.9249" data-lon="18.4241"   data-label="Cape Town, South Africa">🇿🇦 Cape Town, South Africa</option>
+    <option value="manual" data-lat="55.7558"  data-lon="37.6173"   data-label="Moscow, Russia">🇷🇺 Moscow, Russia</option>
+    <option value="manual" data-lat="13.7563"  data-lon="100.5018"  data-label="Bangkok, Thailand">🇹🇭 Bangkok, Thailand</option>
+    <option value="manual" data-lat="1.3521"   data-lon="103.8198"  data-label="Singapore">🇸🇬 Singapore</option>
+  </select>
+
   <button id="regenerate" class="regen" hidden title="Generate a new design">↻ Regenerate</button>
   <div id="model-badge" class="model-badge" hidden></div>
 

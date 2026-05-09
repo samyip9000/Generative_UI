@@ -45,6 +45,16 @@ function showError(msg) {
 }
 
 async function getCoords() {
+  const picker = document.getElementById("location-picker");
+  const opt    = picker?.selectedOptions?.[0];
+  if (opt && opt.value === "manual") {
+    return {
+      lat:    parseFloat(opt.dataset.lat),
+      lon:    parseFloat(opt.dataset.lon),
+      city:   opt.dataset.label,
+      source: "manual",
+    };
+  }
   return new Promise((resolve) => {
     if (!navigator.geolocation) return resolve(ipLookup());
     navigator.geolocation.getCurrentPosition(
@@ -191,6 +201,25 @@ document.getElementById("regenerate").addEventListener("click", () => {
     btn.disabled = false;
     btn.textContent = "↻ Regenerate";
   });
+});
+
+// Location picker: persist selection (by index) and re-run on change.
+const picker = document.getElementById("location-picker");
+const savedIdx = parseInt(localStorage.getItem("locationIdx") ?? "", 10);
+if (!Number.isNaN(savedIdx) && savedIdx >= 0 && savedIdx < picker.options.length) {
+  picker.selectedIndex = savedIdx;
+}
+picker.addEventListener("change", () => {
+  localStorage.setItem("locationIdx", String(picker.selectedIndex));
+  // Reset to loading state before re-running.
+  document.getElementById("ai-frame").hidden = true;
+  document.getElementById("ai-frame").srcdoc = "";
+  document.getElementById("fallback-card").style.display = "";
+  document.querySelector(".scene").style.display = "";
+  document.getElementById("greeting").textContent = "Loading your day…";
+  document.getElementById("subtitle").textContent = "Asking the AI to design today's greeting.";
+  document.getElementById("error").hidden = true;
+  run();
 });
 
 run();
